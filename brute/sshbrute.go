@@ -7,12 +7,12 @@ import (
 )
 
 type SSHBrute struct {
-	Name string
+	Protocol string
 }
 
 func CreateSSHBrute() SSHBrute {
 	return SSHBrute{
-		Name: "ssh",
+		Protocol: "ssh",
 	}
 }
 
@@ -36,6 +36,6 @@ func (s SSHBrute) TryWithPort(host, username, password string, port int) bool {
 	return err == nil
 }
 
-func (s SSHBrute) GetName() string {
-	return s.Name
+func (s SSHBrute) GetProtocol() string {
+	return s.Protocol
 }

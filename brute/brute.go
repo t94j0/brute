@@ -3,7 +3,7 @@ package brute
 type Brute interface {
 	Try(host, username, password string) bool
 	TryWithPort(host, username, password string, port int) bool
-	GetName() string
+	GetProtocol() string
 }
 
 func GetBruteImplMap() map[string]Brute {
