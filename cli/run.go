@@ -58,6 +58,7 @@ func Run() error {
 		return err
 	}
 
+	// Print help if the `-h` flag is on
 	if args.Help {
 		fmt.Println("General Arguments:")
 		fmt.Print(args.ListString())
@@ -71,8 +72,7 @@ func Run() error {
 	// Make sure selected module exists
 	moduleSkel, ok := bruteMap[args.ModuleType]
 	if !ok {
-		fmt.Println(errors.New("No such module " + args.ModuleType))
-		os.Exit(1)
+		return errors.New("No such module " + args.ModuleType)
 	}
 
 	// Fill in module with data in arguments
@@ -84,6 +84,11 @@ func Run() error {
 	if args.Help {
 		fmt.Println("Module-specific arguments")
 		fmt.Print(brute.GetCliHelp(module))
+		return nil
+	}
+
+	if !args.DidFillRequired() {
+		return errors.New("Required arguments not filled in")
 	}
 
 	Brute(args, module)

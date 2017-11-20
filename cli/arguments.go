@@ -51,6 +51,7 @@ func createArgumentMap(args []string) (map[string]string, error) {
 	for i := 0; i < len(args); i++ {
 		argument := args[i]
 
+		// Check the last argument independently
 		if i == len(args)-1 {
 			if argument[:2] == "--" {
 				variableName := argument[2:len(argument)]
@@ -140,7 +141,9 @@ func fileToArray(fileName string) []string {
 	}
 
 	for _, str := range strings.Split(string(file), "\n") {
-		ret = append(ret, str)
+		if str != "" {
+			ret = append(ret, str)
+		}
 	}
 	return ret
 }
@@ -190,4 +193,17 @@ func (args Arguments) ListString() (output string) {
 		}
 	}
 	return output
+}
+
+func (args Arguments) DidFillRequired() bool {
+	if len(args.Users) == 0 {
+		return false
+	}
+	if len(args.Passwords) == 0 {
+		return false
+	}
+	if len(args.Hosts) == 0 {
+		return false
+	}
+	return true
 }
