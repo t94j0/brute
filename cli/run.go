@@ -9,7 +9,9 @@ import (
 	brute "github.com/t94j0/brute/brute-protocol"
 )
 
-func fillIn(args Arguments, moduleT brute.Brute) (brute.Brute, error) {
+// fillIn takes a list of parameters and a module to fill in those parameters to
+// This returns a filled in struct of type `moduleT`
+func fillIn(fillData map[string]string, moduleT brute.Brute) (brute.Brute, error) {
 	module := reflect.New(reflect.TypeOf(moduleT)).Elem()
 
 	for i := 0; i < module.NumField(); i++ {
@@ -22,7 +24,7 @@ func fillIn(args Arguments, moduleT brute.Brute) (brute.Brute, error) {
 		_, isRequired := fieldType.Tag.Lookup("required")
 		// Get any default arguments
 		defaultVal, hasDefault := fieldType.Tag.Lookup("default")
-		argument, hasArgument := args.Extra[bruteName]
+		argument, hasArgument := fillData[bruteName]
 		if !fieldValue.CanSet() {
 			return nil, errors.New("Module Error: Cannot set parameter")
 		} else if hasArgument {
@@ -69,6 +71,14 @@ func Run() error {
 
 	bruteMap := brute.GetBruteMap()
 
+	// If `--list` is selected, print all modules
+	if args.List {
+		for key, _ := range bruteMap {
+			fmt.Println(key)
+		}
+		return nil
+	}
+
 	// Make sure selected module exists
 	moduleSkel, ok := bruteMap[args.ModuleType]
 	if !ok {
@@ -76,17 +86,19 @@ func Run() error {
 	}
 
 	// Fill in module with data in arguments
-	module, err := fillIn(args, moduleSkel)
+	module, err := fillIn(args.Extra, moduleSkel)
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	// Print out module-specific help message if `-h` flag is set
 	if args.Help {
 		fmt.Println("Module-specific arguments")
 		fmt.Print(brute.GetCliHelp(module))
 		return nil
 	}
 
+	// Make sure all generic arguments are filled in
 	if !args.DidFillRequired() {
 		return errors.New("Required arguments not filled in")
 	}

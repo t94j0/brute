@@ -15,7 +15,6 @@ func GetBruteMap() map[string]Brute {
 
 	list := []Brute{
 		SSHBrute{},
-		TestBrute{},
 	}
 
 	// Get default values for protocols by reflection
