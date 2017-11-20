@@ -9,12 +9,6 @@ type SSHBrute struct {
 	Port     string `cli:"port" default:"22" required:"true"`
 }
 
-func CreateSSHBrute() SSHBrute {
-	return SSHBrute{
-		Protocol: "ssh",
-	}
-}
-
 func (s SSHBrute) Try(host, username string, password []byte) bool {
 	host += ":" + s.Port
 

@@ -55,7 +55,7 @@ func Brute(args Arguments, module brute.Brute) {
 
 func Run() error {
 	// Get arguments and available brute modules
-	args, err := createArguments(os.Args[1:])
+	args, err := CreateArguments(os.Args[1:])
 	if err != nil {
 		return err
 	}

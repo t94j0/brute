@@ -11,7 +11,7 @@ import (
 // RawArguments specifies the arguments in the program
 // `name` is the cli argument long name. e.g. --type
 // `sh` is the shorthand name e.g. --type == -t
-type RawArguments struct {
+type Arguments struct {
 	// ModuleType is the module type name
 	ModuleType string `name:"type" short:"t" description:"Module to select"`
 	// UserPath is a newline delimited path of users
@@ -28,20 +28,10 @@ type RawArguments struct {
 	HostPath string `name:"hostpath" short:"hp" description:"A list of hosts to brute force"`
 	// List is a market to determine if the program should list all modules
 	List bool `name:"list" short:"l" description:"List all available modules"`
+	// Help prints help messgaes
 	Help bool `name:"help" short:"h" description:"Get help from package"`
 	// Represents the rest of the arguments
 	Extra map[string]string
-}
-
-// Arguments is the orchestrated arguments
-type Arguments struct {
-	ModuleType string
-	Users      []string
-	Passwords  [][]byte
-	Hosts      []string
-	List       bool
-	Help       bool
-	Extra      map[string]string
 }
 
 func createArgumentMap(args []string) (map[string]string, error) {
@@ -85,8 +75,8 @@ func createArgumentMap(args []string) (map[string]string, error) {
 	return outputMap, nil
 }
 
-func createArgumentModule(argMap map[string]string) RawArguments {
-	retArgs := reflect.New(reflect.TypeOf(RawArguments{})).Elem()
+func createArgumentModule(argMap map[string]string) Arguments {
+	retArgs := reflect.New(reflect.TypeOf(Arguments{})).Elem()
 
 	strType := reflect.TypeOf("")
 	extraMap := reflect.MakeMap(reflect.MapOf(strType, strType))
@@ -120,16 +110,16 @@ func createArgumentModule(argMap map[string]string) RawArguments {
 
 	retArgs.FieldByName("Extra").Set(extraMap)
 
-	return retArgs.Interface().(RawArguments)
+	return retArgs.Interface().(Arguments)
 }
 
 // createArguments when inputting `os.Args`, it will output an Arguments struct
-func createArguments(args []string) (Arguments, error) {
+func CreateArguments(args []string) (Arguments, error) {
 	argMap, err := createArgumentMap(args)
 	if err != nil {
 		return Arguments{}, err
 	}
-	return createArgumentModule(argMap).toNormal(), nil
+	return createArgumentModule(argMap), nil
 }
 
 func fileToArray(fileName string) []string {
@@ -148,41 +138,8 @@ func fileToArray(fileName string) []string {
 	return ret
 }
 
-// toNormal
-func (arg RawArguments) toNormal() Arguments {
-	retArgs := Arguments{}
-
-	retArgs.ModuleType = arg.ModuleType
-	retArgs.List = arg.List
-	retArgs.Help = arg.Help
-	retArgs.Extra = arg.Extra
-
-	if arg.User != "" {
-		retArgs.Users = []string{arg.User}
-	} else if arg.UserPath != "" {
-		retArgs.Users = fileToArray(arg.UserPath)
-	}
-
-	if arg.Password != "" {
-		retArgs.Passwords = [][]byte{[]byte(arg.Password)}
-	} else if arg.PasswordPath != "" {
-		retArgs.Passwords = make([][]byte, 0)
-		for _, file := range fileToArray(arg.PasswordPath) {
-			retArgs.Passwords = append(retArgs.Passwords, []byte(file))
-		}
-	}
-
-	if arg.Host != "" {
-		retArgs.Hosts = []string{arg.Host}
-	} else if arg.HostPath != "" {
-		retArgs.Hosts = fileToArray(arg.HostPath)
-	}
-
-	return retArgs
-}
-
 func (args Arguments) ListString() (output string) {
-	argsType := reflect.TypeOf(RawArguments{})
+	argsType := reflect.TypeOf(Arguments{})
 	for i := 0; i < argsType.NumField(); i++ {
 		fieldTag := argsType.Field(i).Tag
 		name := fieldTag.Get("name")
@@ -196,13 +153,13 @@ func (args Arguments) ListString() (output string) {
 }
 
 func (args Arguments) DidFillRequired() bool {
-	if len(args.Users) == 0 {
+	if args.User == "" && args.UserPath == "" {
 		return false
 	}
-	if len(args.Passwords) == 0 {
+	if args.Password == "" && args.PasswordPath == "" {
 		return false
 	}
-	if len(args.Hosts) == 0 {
+	if args.Host == "" && args.HostPath == "" {
 		return false
 	}
 	return true
