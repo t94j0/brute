@@ -1,13 +1,12 @@
 package brute
 
 import (
-	"strconv"
-
 	"golang.org/x/crypto/ssh"
 )
 
 type SSHBrute struct {
-	Protocol string
+	Protocol string `default:"ssh"`
+	Port     string `cli:"port" default:"22" required:"true"`
 }
 
 func CreateSSHBrute() SSHBrute {
@@ -16,17 +15,13 @@ func CreateSSHBrute() SSHBrute {
 	}
 }
 
-func (s SSHBrute) Try(host, username, password string) bool {
-	return s.TryWithPort(host, username, password, 22)
-}
-
-func (s SSHBrute) TryWithPort(host, username, password string, port int) bool {
-	host += ":" + strconv.Itoa(port)
+func (s SSHBrute) Try(host, username string, password []byte) bool {
+	host += ":" + s.Port
 
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
-			ssh.Password(password),
+			ssh.Password(string(password)),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}

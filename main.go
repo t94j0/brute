@@ -1,9 +1,13 @@
 package main
 
 import (
-	"github.com/t94j0/ssh-bruteforce/cmd"
+	"fmt"
+
+	"github.com/t94j0/brute/cli"
 )
 
 func main() {
-	cmd.Execute()
+	if err := cli.Run(); err != nil {
+		fmt.Println(err)
+	}
 }

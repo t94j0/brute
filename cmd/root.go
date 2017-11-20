@@ -15,11 +15,12 @@ var cfgFile string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "ssh-brute",
+	Use:   "ssh-brute [host]",
 	Short: "Brute force anything!",
 	Long:  `As long as it's listed in '--list'`,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		bruteWelcome()
+		bruteWelcome(args[0])
 	},
 }
 
@@ -31,7 +32,7 @@ var passLoc string
 var user string
 var pass string
 
-func bruteWelcome() {
+func bruteWelcome(host string) {
 	implementations := brute.GetBruteImplMap()
 	switch {
 	case isList:
@@ -41,7 +42,7 @@ func bruteWelcome() {
 		break
 	case host != "":
 		if _, ok := implementations[bruteType]; ok {
-			bruteForce(implementations[bruteType])
+			bruteForce(implementations[bruteType], host)
 		} else {
 			fmt.Println("Error: bruteforce type does not exist")
 		}
@@ -85,7 +86,7 @@ func constructLists() (userList, passList []string) {
 	return
 }
 
-func bruteForce(bruteStrategy brute.Brute) {
+func bruteForce(bruteStrategy brute.Brute, host string) {
 	userList, passList := constructLists()
 	tracker := progress.CreateTrackerMax("Wordlist Completion", len(userList)*len(passList))
 	for _, user := range userList {
@@ -109,7 +110,6 @@ func Execute() {
 
 func init() {
 	RootCmd.Flags().BoolVarP(&isList, "list", "l", false, "List all installed implementations")
-	RootCmd.Flags().StringVarP(&host, "host", "", "127.0.0.1", "Username for user")
 	RootCmd.Flags().StringVar(&user, "user", "", "Username for user")
 	RootCmd.Flags().StringVar(&pass, "password", "", "Password for user")
 	RootCmd.Flags().StringVar(&userLoc, "usernamePath", "", "Location for username list")
