@@ -3,9 +3,9 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 
+	flags "github.com/svent/go-flags"
 	brute "github.com/t94j0/brute/brute-protocol"
 )
 
@@ -41,29 +41,20 @@ func fillIn(fillData map[string]string, moduleT brute.Brute) (brute.Brute, error
 	return module.Interface().(brute.Brute), nil
 }
 
-func Brute(args Arguments, module brute.Brute) {
-	for _, h := range args.Hosts {
-		for _, u := range args.Users {
-			for _, p := range args.Passwords {
-				if ok := module.Try(h, u, p); ok {
-					fmt.Printf("[+] %s: \"%s\":\"%s\"\n", h, u, p)
-				}
-			}
-		}
-	}
-}
-
 func Run() error {
+	args := Arguments{}
+	argParser := flags.NewParser(&args, flags.IgnoreUnknown)
+
 	// Get arguments and available brute modules
-	args, err := CreateArguments(os.Args[1:])
+	_, err := argParser.Parse()
 	if err != nil {
 		return err
 	}
 
 	// Print help if the `-h` flag is on
-	if args.Help {
+	if len(args.Help) > 0 {
 		fmt.Println("General Arguments:")
-		fmt.Print(args.ListString())
+		fmt.Println(argParser.Usage)
 		if args.ModuleType == "" {
 			return nil
 		}
@@ -72,7 +63,7 @@ func Run() error {
 	bruteMap := brute.GetBruteMap()
 
 	// If `--list` is selected, print all modules
-	if args.List {
+	if len(args.List) > 0 {
 		for key, _ := range bruteMap {
 			fmt.Println(key)
 		}
@@ -92,18 +83,17 @@ func Run() error {
 	}
 
 	// Print out module-specific help message if `-h` flag is set
-	if args.Help {
+	if len(args.Help) > 0 {
 		fmt.Println("Module-specific arguments")
 		fmt.Print(brute.GetCliHelp(module))
 		return nil
 	}
 
-	// Make sure all generic arguments are filled in
-	if !args.DidFillRequired() {
-		return errors.New("Required arguments not filled in")
-	}
+	wlb := NewWordListBrute(args.Host, args.HostPath, args.User, args.UserPath, args.Password, args.PasswordPath)
 
-	Brute(args, module)
+	if err := Brute(wlb, module); err != nil {
+		return err
+	}
 
 	return nil
 }

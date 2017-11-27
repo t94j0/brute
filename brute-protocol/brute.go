@@ -15,6 +15,7 @@ func GetBruteMap() map[string]Brute {
 
 	list := []Brute{
 		SSHBrute{},
+		FTPBrute{},
 	}
 
 	// Get default values for protocols by reflection
@@ -30,6 +31,20 @@ func GetBruteMap() map[string]Brute {
 	}
 
 	return bruteMap
+}
+
+type BruteData struct {
+	host     string
+	username string
+	pwd      string
+}
+
+func BruteChan(module Brute, dataChan <-chan BruteData, results chan<- BruteData) {
+	for d := range dataChan {
+		if ok := module.Try(d.host, d.username, []byte(d.pwd)); ok {
+			results <- d
+		}
+	}
 }
 
 func GetCliHelp(module Brute) string {
